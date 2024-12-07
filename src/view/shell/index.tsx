@@ -1,4 +1,4 @@
-import {useCallback, useEffect} from 'react'
+import {useCallback, useEffect, useState} from 'react'
 import {BackHandler, useWindowDimensions, View} from 'react-native'
 import {Drawer} from 'react-native-drawer-layout'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
@@ -32,6 +32,8 @@ import {BottomSheetOutlet} from '../../../modules/bottom-sheet'
 import {updateActiveViewAsync} from '../../../modules/expo-bluesky-swiss-army/src/VisibilityView'
 import {Composer} from './Composer'
 import {DrawerContent} from './Drawer'
+import {GestureContext} from './GestureContext'
+import {Gesture} from 'react-native-gesture-handler'
 
 function ShellInner() {
   const t = useTheme()
@@ -90,6 +92,12 @@ function ShellInner() {
     }
   }, [dedupe, navigation])
 
+  const [nativeGesture, setNativeGesture] = useState(() => Gesture.Native())
+  const handlePagerRef = useCallback(() => {
+    setNativeGesture(Gesture.Native()) // Force rewiring
+  }, [])
+
+  const swipeEnabled = !canGoBack && hasSession && !isDrawerSwipeDisabled
   return (
     <>
       <View style={[a.h_full]}>
@@ -98,12 +106,22 @@ function ShellInner() {
           <Drawer
             renderDrawerContent={renderDrawerContent}
             drawerStyle={{width: Math.min(400, winDim.width * 0.8)}}
+            configureGestureHandler={handler => {
+              if (swipeEnabled && !isDrawerOpen) {
+                return handler
+                  .blocksExternalGesture(nativeGesture)
+                  .activeOffsetX(1)
+                  .failOffsetX(-1)
+              } else {
+                return handler
+              }
+            }}
             open={isDrawerOpen}
             onOpen={onOpenDrawer}
             onClose={onCloseDrawer}
             swipeEdgeWidth={winDim.width / 2}
             drawerType={isIOS ? 'slide' : 'front'}
-            swipeEnabled={!canGoBack && hasSession && !isDrawerSwipeDisabled}
+            swipeEnabled={swipeEnabled}
             overlayStyle={{
               backgroundColor: select(t.name, {
                 light: 'rgba(0, 57, 117, 0.1)',
@@ -113,7 +131,10 @@ function ShellInner() {
                 dim: 'rgba(10, 13, 16, 0.8)',
               }),
             }}>
-            <TabsNavigator />
+            <GestureContext.Provider
+              value={{nativeGesture, onRef: handlePagerRef}}>
+              <TabsNavigator />
+            </GestureContext.Provider>
           </Drawer>
         </ErrorBoundary>
       </View>
