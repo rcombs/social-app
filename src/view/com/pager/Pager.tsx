@@ -1,13 +1,12 @@
 import React, {forwardRef, useContext} from 'react'
 import {View} from 'react-native'
+import {Gesture, GestureDetector} from 'react-native-gesture-handler'
 import PagerView, {
   PagerViewOnPageScrollEventData,
   PagerViewOnPageSelectedEvent,
   PagerViewOnPageSelectedEventData,
   PageScrollStateChangedNativeEventData,
 } from 'react-native-pager-view'
-import {GestureDetector} from 'react-native-gesture-handler'
-import {GestureContext} from '#/view/shell/GestureContext'
 import Animated, {
   runOnJS,
   SharedValue,
@@ -16,6 +15,7 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated'
 
+import {GestureContext} from '#/view/shell/GestureContext'
 import {atoms as a, native} from '#/alf'
 
 export type PageSelectedEvent = PagerViewOnPageSelectedEvent
@@ -115,7 +115,9 @@ export const Pager = forwardRef<PagerRef, React.PropsWithChildren<Props>>(
       [parentOnPageScrollStateChanged],
     )
 
-    const {nativeGesture, onRef} = useContext(GestureContext)
+    const drawerGesture = useContext(GestureContext)
+    const nativeGesture =
+      Gesture.Native().requireExternalGestureToFail(drawerGesture)
 
     return (
       <View testID={testID} style={[a.flex_1, native(a.overflow_hidden)]}>
@@ -127,10 +129,7 @@ export const Pager = forwardRef<PagerRef, React.PropsWithChildren<Props>>(
         })}
         <GestureDetector gesture={nativeGesture}>
           <AnimatedPagerView
-            ref={node => {
-              pagerView.current = node
-              onRef(node)
-            }}
+            ref={pagerView}
             style={[a.flex_1]}
             initialPage={initialPage}
             onPageScroll={handlePageScroll}>

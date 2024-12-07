@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native-drawer-layout/lib/commonjs/views/Drawer.native.js b/node_modules/react-native-drawer-layout/lib/commonjs/views/Drawer.native.js
+index fd65ab8..fbcd18a 100644
+--- a/node_modules/react-native-drawer-layout/lib/commonjs/views/Drawer.native.js
++++ b/node_modules/react-native-drawer-layout/lib/commonjs/views/Drawer.native.js
+@@ -266,7 +266,7 @@ function Drawer({
+               accessibilityElementsHidden: isOpen && drawerType !== 'permanent',
+               importantForAccessibility: isOpen && drawerType !== 'permanent' ? 'no-hide-descendants' : 'auto',
+               style: styles.content,
+-              children: children
++              children: typeof children === 'function' ? children({gesture: pan}) : children
+             }), drawerType !== 'permanent' ? /*#__PURE__*/(0, _jsxRuntime.jsx)(_Overlay.Overlay, {
+               open: open,
+               progress: progress,

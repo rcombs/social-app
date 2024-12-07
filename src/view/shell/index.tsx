@@ -1,4 +1,4 @@
-import {useCallback, useEffect, useState} from 'react'
+import {useCallback, useEffect} from 'react'
 import {BackHandler, useWindowDimensions, View} from 'react-native'
 import {Drawer} from 'react-native-drawer-layout'
 import {useSafeAreaInsets} from 'react-native-safe-area-context'
@@ -33,7 +33,6 @@ import {updateActiveViewAsync} from '../../../modules/expo-bluesky-swiss-army/sr
 import {Composer} from './Composer'
 import {DrawerContent} from './Drawer'
 import {GestureContext} from './GestureContext'
-import {Gesture} from 'react-native-gesture-handler'
 
 function ShellInner() {
   const t = useTheme()
@@ -92,11 +91,6 @@ function ShellInner() {
     }
   }, [dedupe, navigation])
 
-  const [nativeGesture, setNativeGesture] = useState(() => Gesture.Native())
-  const handlePagerRef = useCallback(() => {
-    setNativeGesture(Gesture.Native()) // Force rewiring
-  }, [])
-
   const swipeEnabled = !canGoBack && hasSession && !isDrawerSwipeDisabled
   return (
     <>
@@ -108,10 +102,7 @@ function ShellInner() {
             drawerStyle={{width: Math.min(400, winDim.width * 0.8)}}
             configureGestureHandler={handler => {
               if (swipeEnabled && !isDrawerOpen) {
-                return handler
-                  .blocksExternalGesture(nativeGesture)
-                  .activeOffsetX(1)
-                  .failOffsetX(-1)
+                return handler.activeOffsetX(1).failOffsetX(-1)
               } else {
                 return handler
               }
@@ -131,10 +122,11 @@ function ShellInner() {
                 dim: 'rgba(10, 13, 16, 0.8)',
               }),
             }}>
-            <GestureContext.Provider
-              value={{nativeGesture, onRef: handlePagerRef}}>
-              <TabsNavigator />
-            </GestureContext.Provider>
+            {({gesture}) => (
+              <GestureContext.Provider value={gesture}>
+                <TabsNavigator />
+              </GestureContext.Provider>
+            )}
           </Drawer>
         </ErrorBoundary>
       </View>
